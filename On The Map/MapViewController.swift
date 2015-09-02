@@ -122,6 +122,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                         } else {
                             updatedAt = ""
                         }
+                        /*
                         println("*** ===================================== ***")
                         println("Found logged on Udacity User pin record!")
                         println("\t\(firstName) \(lastName)")
@@ -134,7 +135,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                         println("\tcreatedAt: \(createdAt)")
                         println("\tupdatedAt: \(updatedAt)")
                         println("*** ===================================== ***")
-                        
+                        */
                         // Save to the logged on Udacity Student record
                         udacityUser.setStudentLocation(true,
                             objectID: student.objectID,
@@ -144,6 +145,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                             longitude: student.longitude!,
                             createdAt: createdAt,
                             updatedAt: updatedAt)
+                    /*
                     } else {
                         println()
                         println("!!!! ERROR: Found more than one pin record for the logged on Udacity user!")
@@ -157,6 +159,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                         println("\tcreatedAt: \(student.createdAt)")
                         println("\tupdatedAt: \(student.updatedAt)")
                         println()
+                    */
                     }
                 }
                 
@@ -188,7 +191,13 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         if pinView == nil {
             pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseID)
             pinView!.canShowCallout = true
-            pinView!.pinColor = .Green
+            let thisTitle = annotation.title!
+            if thisTitle == "\(udacityUser.firstName) \(udacityUser.LastName)" {
+                println("thisTitle: \(thisTitle) == \(udacityUser.firstName) \(udacityUser.LastName)")
+                pinView!.pinColor = .Red
+            } else {
+                pinView!.pinColor = .Green
+            }
             pinView!.rightCalloutAccessoryView = UIButton.buttonWithType(.DetailDisclosure) as! UIButton
         } else {
             pinView!.annotation = annotation

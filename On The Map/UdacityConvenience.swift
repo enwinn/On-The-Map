@@ -12,7 +12,6 @@ extension UdacityClient {
     
     // MARK: - Login/Create User Session
     func createUserSession(username: String, password: String, completionHandler: (success: Bool, message: String, error: NSError?) -> Void) {
-        println("Inside createUserSession")
         var method: String = Methods.AccountSignIn
         println("\tAccountSignIn method:\(method)")
         let jsonBody: [String: AnyObject] = [
@@ -91,7 +90,6 @@ extension UdacityClient {
     
     // MARK: Get data for the Udacity User that logged in. Only called by createUserSession above.
     private func getUdacityUserData(userID: String, completionHandler: (success: Bool, message: String, error: NSError?) -> Void) {
-        println("\t\t\tInside getUdacityUserData")
         var method: String = Methods.AccountUserData + userID
         println("\t\t\tAccountUserData method:\(method)")
         
@@ -101,24 +99,18 @@ extension UdacityClient {
                 completionHandler(success: false, message: "taskForGETMethod error getting logged in user data", error: error)
             } else {
                 if let userDictionary = JSONResult.valueForKey(UdacityClient.JSONResponseKeys.User) as? NSDictionary {
-                    println("\t\t\tGot the userDictionary!")
                     if let firstName = userDictionary.valueForKey(UdacityClient.JSONResponseKeys.FirstName) as? String {
-                        println("\t\t\tGot firstName: \(firstName)")
                         if let lastName = userDictionary.valueForKey(UdacityClient.JSONResponseKeys.LastName) as? String {
-                            println("\t\t\tGot lastName: \(lastName), saving Udacity User Data!")
                             udacityUser.setUdacityUser(firstName, lastName: lastName, userID: userID)
                             completionHandler(success: true, message: "Got User lastName:\(lastName)", error: nil)
                         } else {
-                            println("\t\t\tFailed to get lastName")
                             completionHandler(success: false, message: "Failed to get User lastName", error: NSError(domain: "userDictionary parsing for lastName error", code: 0, userInfo: [NSLocalizedDescriptionKey: "Could not get User lastName"]))
                         }
                     } else {
-                        println("\t\t\tFailed to get firstName")
                         completionHandler(success: false, message: "Failed to get User firstName", error: NSError(domain: "userDictionary parsing for firstName error", code: 0, userInfo: [NSLocalizedDescriptionKey: "Could not get User firstName"]))
                     }
                 } else {
                     // userDictionary fubar, check for status/error message
-                    println("\t\t\tUnknown userDictionary problem, checking for error message")
                     if let message = JSONResult.valueForKey(UdacityClient.JSONResponseKeys.ErrorMessage) as? String {
                         completionHandler(success: false, message: message, error: nil)
                     }

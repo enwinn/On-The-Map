@@ -21,14 +21,13 @@ class ParseClient: NSObject {
     func taskForGETMethod(method: String, parameters: [String: AnyObject], completionHandler: (result: AnyObject!, error: NSError?) -> Void) -> NSURLSessionDataTask {
         // 1. Set the parameters: There are none
         var mutableParameters = parameters
-        println("ParseClient.taskForGETMethod mutableParameters: \(mutableParameters)")
+//        println("ParseClient.taskForGETMethod mutableParameters: \(mutableParameters)")
         
         // 2/3. Build the URL and configure the request
         let urlString = Constants.BaseSecureURL + method + ParseClient.encodeParameters(params: mutableParameters)
         println("ParseClient.taskForGETMethod urlString: \(urlString)")
         let url = NSURL(string: urlString)!
         let request = NSMutableURLRequest(URL: url)
-        println("Setting the HTTP Header values for App Id and API key")
         request.addValue(Constants.ParseAppId, forHTTPHeaderField: "X-Parse-Application-Id")
         request.addValue(Constants.ParseRESTAPIKey, forHTTPHeaderField: "X-Parse-REST-API-Key")
         
@@ -36,7 +35,6 @@ class ParseClient: NSObject {
         let task = session.dataTaskWithRequest(request) {data, response, downloadError in
             
             // 5/6. Parse the data and use the data (happens in completion handler)
-            println("Making the GET StudentInformation data request")
             if let error = downloadError {
                 println("Got a download error: \(error)")
                 let newError = ParseClient.errorForData(data, response: response, error: error)

@@ -20,14 +20,6 @@ class StudentLocationTableViewController: UITableViewController, UITableViewDele
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Set the background gradient
-        // Useful in designing color gradients by defining 2 end colors and the number of steps between: http://www.perbang.dk/rgbgradient/
-        // using 3 steps (hex)
-        let baseOrange = UIColor(hex: 0xff7f00, alpha: 1.0)
-        let lightOrange = UIColor(hex: 0xff9800, alpha: 1.0)
-        let lighterOrange = UIColor(hex: 0xffb100, alpha: 1.0)
-        self.view.layer.configureGradientBackground(baseOrange.CGColor, lightOrange.CGColor, lighterOrange.CGColor)
-        
         // Initial Student Information data request
         println("\nTableView: Initial table load of Student Information")
         let qualityOfServiceClass = Int(QOS_CLASS_USER_INITIATED.value)
@@ -49,6 +41,8 @@ class StudentLocationTableViewController: UITableViewController, UITableViewDele
         
         // Subscribe to notifications
         notificationCenter.addObserver(self, selector: "updateTableView", name: StudentLocationNotificationKey, object: nil)
+        
+        self.updateTableView()
     }
     
     override func viewWillDisappear(animated: Bool) {
@@ -60,14 +54,11 @@ class StudentLocationTableViewController: UITableViewController, UITableViewDele
     
     
     func updateTableView() {
-        println("Updating the Table View...")
         dispatch_async(dispatch_get_main_queue()) {
             // Get student locations
-            println("\tTableView: Getting student locations...")
             self.studentLocations = globalStudentLocations
             
             // reload data
-            println("\tTableView: reloading data")
             self.studentLocationTableView.reloadData()
         }
     }
@@ -80,8 +71,9 @@ class StudentLocationTableViewController: UITableViewController, UITableViewDele
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let student = studentLocations[indexPath.row]
         let cell = tableView.dequeueReusableCellWithIdentifier("studentLocationCell", forIndexPath: indexPath) as! UITableViewCell
-
+        
         cell.textLabel!.text = student.firstName + " " + student.lastName
+        
         if let mediaURL = student.mediaURL {
             cell.detailTextLabel!.text = mediaURL
         } else {
@@ -127,7 +119,6 @@ class StudentLocationTableViewController: UITableViewController, UITableViewDele
     
     
     // MARK: - Helper: Alert Utility to display error messages
-    // NOTE: Calls to this function should be inside of dispatch_asyn(dispatch_get_main_queue()) envelopes!
     func showMessageAlert(alertTitle: String, message: String) {
         var messageAlert = UIAlertController(title: alertTitle, message: message, preferredStyle: .Alert)
         messageAlert.addAction(UIAlertAction(title: "Dismiss", style: .Default, handler: nil))

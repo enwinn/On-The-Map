@@ -61,17 +61,13 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         // dismiss the keyboard if present
         self.view.endEditing(true)
         println("Pressed the login button")
-//        if loginEmail.text != "" && loginPassword.text != "" {
         if let email = loginEmail.text,
            let password = loginPassword.text {
-            println("AI start: loginToUdacity")
             ActivityIndicatorView.shared.showActivityIndicator(view)
             println("Attempting to create a Udacity session")
-//            UdacityClient.sharedInstance().createUserSession(loginEmail.text, password: loginPassword.text) { success, message, error in
             UdacityClient.sharedInstance().createUserSession(email, password: password) { success, message, error in
                 if success {
                     // complete login
-                    println("Udacity Login/Create Session Succeeded!")
                     self.completeLogin()
                 } else {
                     // show alert about any returned errors
@@ -88,7 +84,6 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     
     func completeLogin() {
-        println("AI stop: completeLogin")
         ActivityIndicatorView.shared.hideActivityIndicatorView()
         let controller = self.storyboard!.instantiateViewControllerWithIdentifier("StudentNavigationController") as! UINavigationController
         self.presentViewController(controller, animated: true, completion: nil)
@@ -98,7 +93,6 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     // MARK: - Helper: Alert Utility to display error messages
     func showMessageAlert(alertTitle: String, message: String) {
         dispatch_async(dispatch_get_main_queue()) {
-            println("AI stop: showMessageAlert")
             ActivityIndicatorView.shared.hideActivityIndicatorView()
             var messageAlert = UIAlertController(title: alertTitle, message: message, preferredStyle: .Alert)
             messageAlert.addAction(UIAlertAction(title: "Dismiss", style: .Default, handler: nil))
@@ -152,30 +146,25 @@ extension LoginViewController {
 extension LoginViewController {
     
     func subscribeToKeyboardNotifications() {
-        println("Subscribing to keyboard notification")
         notificationCenter.addObserver(self, selector: "keyboardWillShow:", name: UIKeyboardWillShowNotification, object: nil)
         notificationCenter.addObserver(self, selector: "keyboardWillHide:", name: UIKeyboardWillHideNotification, object: nil)
     }
     
     func unsubscribeToKeyboardNotifications() {
-        println("Unsubscribing to keyboard notification")
         notificationCenter.removeObserver(self)
     }
     
     func keyboardWillShow(notification: NSNotification) {
-        println("Keyboard will show notification")
         self.view.frame.origin.y = -getKeyboardHeight(notification)
     }
 
     func keyboardWillHide(notification: NSNotification) {
-        println("Keyboard will hide notification")
         // Just return origin to it's default since this should not be changing for this app
         self.view.frame.origin.y = 0.0
     }
     
     // MARK: - Tap recognizer functions
     func addKeyboardDismissRecognizer() {
-        println("Add the recognizer to dismiss the keyboard")
         if tapRecognizer == nil {
             tapRecognizer = UITapGestureRecognizer(target: self, action: "handleSingleTap:")
             tapRecognizer!.numberOfTapsRequired = 1
@@ -184,7 +173,6 @@ extension LoginViewController {
     }
     
     func removeKeyboardDismissRecognizer() {
-        println("Remove the recognizer to dismiss the keyboard")
         if tapRecognizer != nil {
             self.view.removeGestureRecognizer(tapRecognizer!)
             tapRecognizer = nil
@@ -192,12 +180,10 @@ extension LoginViewController {
     }
     
     func handleSingleTap(recognizer: UITapGestureRecognizer) {
-        println("Tapped to dismiss keyboard")
         view.endEditing(true)
     }
     
     func getKeyboardHeight(notification: NSNotification) -> CGFloat {
-        println("Getting keyboard height")
         let userInfo = notification.userInfo
         let keyboardSize = userInfo![UIKeyboardFrameEndUserInfoKey] as! NSValue // of CGRect
         return keyboardSize.CGRectValue().height

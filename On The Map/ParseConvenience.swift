@@ -13,9 +13,9 @@ extension ParseClient {
     
     // MARK: - Get StudentLocation Collection
     func getStudentInformationCollection(completionHandler: (sucess: Bool, message: String, error: NSError?) -> Void) {
-        // grab the first 100 data records
-        println("getting first 100 student records")
-        getStudentInformation(100, skip: 0, completionHandler: completionHandler)
+        // grab the first 25 data records
+        println("getting first 25 student records")
+        getStudentInformation(25, skip: 0, completionHandler: completionHandler)
     }
     
     func getStudentInformation(limit: Int, skip: Int, completionHandler: (success: Bool, message: String, error: NSError?) -> Void) {
@@ -23,28 +23,27 @@ extension ParseClient {
         println("getStudentInformation method: \(method)")
         var parameters = [
             ParameterKeys.Limit : "\(limit)",
-            ParameterKeys.Skip : "\(skip)"
+            ParameterKeys.Skip : "\(skip)",
+            ParameterKeys.Order : "-updatedAt"
         ]
         println("getStudentInformation paramters: \(parameters)")
         
         let task = taskForGETMethod(method, parameters: parameters) { JSONresult, error in
-            println("Running task for getStudentInformation")
             if let error = error {
                 println("Got an error: \(error.localizedDescription)")
                 completionHandler(success: false, message: "Method Failed (StudentCollection).", error: error)
             } else {
                 if let results = JSONresult.valueForKey(ParseClient.JSONResponseKeys.Results) as? [[String: AnyObject]] {
-                    println("Got StudentInformation results!")
                     var studentLocations = StudentLocation.studentLocationFromResults(results)
                     globalStudentLocations += studentLocations
                     if studentLocations.count == limit {
-                        println("Bumping the skip parameter up another 100")
-                        var newSkip = skip + 100
-                        println("Got a set of 100 records, checking recursively to see if there are more")
+                        // grab the next 25
+                        var newSkip = skip + 25
+                        println("Pulled in \(newSkip-25) records, checking recursively to see if there are more")
                         self.getStudentInformation(limit, skip: newSkip, completionHandler: completionHandler)
                     } else {
-                        println("Done getting records. globalStudentLocations.count: \(globalStudentLocations.count)")
-                        println("Done getting records. studentLocations.count: \(studentLocations.count)")
+//                        println("Done getting records. globalStudentLocations.count: \(globalStudentLocations.count)")
+//                        println("Done getting records. studentLocations.count: \(studentLocations.count)")
                         completionHandler(success: true, message: "Got \(studentLocations.count) student information/location records", error: nil)
                     }
                 } else {
@@ -143,7 +142,7 @@ extension ParseClient {
             if let error = error {
                 completionHandler(success: false, message: "Method failed DELETE(StudentElement)", error: error)
             } else {
-                println("postStudentLocationPin JSONResult: \(JSONResult)")
+//                println("postStudentLocationPin JSONResult: \(JSONResult)")
                 if let message = JSONResult.valueForKey(ParseClient.JSONResponseKeys.ErrorMessage) as? String {
                     completionHandler(success: false, message: message, error: nil)
                 } else {
@@ -162,11 +161,6 @@ extension ParseClient {
         }
     }
     
-//    // sessionDictionary fubar, check for status/error message
-//    println("Unknown sessionDictionary problem, checking for error message")
-//    if let message = JSONResult.valueForKey(UdacityClient.JSONResponseKeys.ErrorMessage) as? String {
-//        completionHandler(success: false, message: message, error: nil)
-//    }
 
     
     // MARK: - JSON helper

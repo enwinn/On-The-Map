@@ -45,13 +45,11 @@ class PostInformationViewController: UIViewController, UITextFieldDelegate, UITe
         if udacityUser.hasPosting {
             // Editing an existing pin (student location record)
             // Requires PUT method to update the existing record
-            println("Post Info: (viewDidLoad) Setting initial location from Udacity User data")
             initialLocation = CLLocation(latitude: CLLocationDegrees(udacityUser.latitude!), longitude: CLLocationDegrees(udacityUser.longitude!))
             textView.text = udacityUser.mapString
             urlTextField.text = udacityUser.mediaURL
             // Add the current record to this mapView
             annotationFromLocation(udacityUser.latitude!, long: udacityUser.longitude!)
-            println("Post Info: (viewDidLoad) Setting map center and region")
             centerMapOnLocation(initialLocation!)
         } else {
             // Creating a new pin (student location record)
@@ -63,7 +61,6 @@ class PostInformationViewController: UIViewController, UITextFieldDelegate, UITe
             locationManager.requestWhenInUseAuthorization()
             locationManager.startUpdatingLocation()
             if locationManager.location != nil {
-                println("Post Info: New pin init - got current location")
                 initialLocation = locationManager.location
                 centerMapOnLocation(initialLocation!)
             }
@@ -101,7 +98,6 @@ class PostInformationViewController: UIViewController, UITextFieldDelegate, UITe
 
     // MARK: - Actions
     @IBAction func cancelPostingInformationButton(sender: UIButton) {
-        println("PostInfo: Pressed Cancel button")
         self.dismissViewControllerAnimated(true, completion: nil)
     }
     
@@ -114,14 +110,11 @@ class PostInformationViewController: UIViewController, UITextFieldDelegate, UITe
     }
     
     @IBAction func removePinButton(sender: UIButton) {
-        println("Post Info: Pressed the remove pin button")
         removePin()
     }
     
     @IBAction func submitButton(sender: UIButton) {
-        println("Post Info: Pressed the submit button")
         // Check for empty or invalid URL
-        println("Post Info: mediaURL: \(urlTextField.text)")
         if verifyURL(urlTextField.text) {
             var thisLocation = StudentLocation()
             thisLocation.mediaURL = urlTextField.text
@@ -257,7 +250,6 @@ class PostInformationViewController: UIViewController, UITextFieldDelegate, UITe
                 }
                 self.mapView.addAnnotation(self.udacityUserAnnotation)
 //                println(pm)
-                println("Post Info: reverse geocode location succeeded")
             } else {
                 println("Problem with the data received from the geocoder")
             }
@@ -393,7 +385,6 @@ extension PostInformationViewController {
     
     // MARK: - Recognizer helpers
     func addKeyboardDismissRecognizer() {
-        println("Post Info: Add the recognizer to dismiss the keyboard")
         if tapRecognizer == nil {
             tapRecognizer = UITapGestureRecognizer(target: self, action: "handleSingleTap:")
             tapRecognizer!.numberOfTapsRequired = 1
@@ -402,7 +393,6 @@ extension PostInformationViewController {
     }
     
     func removeKeyboardDismissRecognizer() {
-        println("Post Info: Remove the recognizer to dismiss the keyboard")
         if tapRecognizer != nil {
             self.view.removeGestureRecognizer(tapRecognizer!)
             tapRecognizer = nil
@@ -410,7 +400,6 @@ extension PostInformationViewController {
     }
     
     func handleSingleTap(recognizer: UITapGestureRecognizer) {
-        println("Post Info: Tapped to dismiss keyboard")
         view.endEditing(true)
     }
     
@@ -445,7 +434,6 @@ extension PostInformationViewController {
     }
     
     func swipeDownToDismissKeyboard(recognizer: UISwipeGestureRecognizer) {
-        println("Post Info: Swiped down to dismiss keyboard")
         view.endEditing(true)
     }
     

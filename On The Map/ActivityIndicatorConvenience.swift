@@ -22,7 +22,6 @@ public class ActivityIndicatorView {
     }
     
     public func showActivityIndicator(view: UIView) {
-        println("AI show: called")
         containerView.frame = view.frame
         containerView.center = view.center
         containerView.backgroundColor = UIColor(hex: 0xffffffff, alpha: 0.4)
@@ -32,11 +31,6 @@ public class ActivityIndicatorView {
         // Configure background gradient
         // useful in designing color gradients by defining 2 end colors and the number of steps between: http://www.perbang.dk/rgbgradient/
         // using 3 steps (hex):
-//        let lightBlue = UIColor(hex: 0x0072fa, alpha: 0.8)
-//        let lighterBlue = UIColor(hex: 0x3590fc, alpha: 0.8)
-//        let lightestBlue = UIColor(hex: 0x6bafff, alpha: 0.8)
-//        indicatorView.layer.configureGradientBackground(lightBlue.CGColor, lighterBlue.CGColor, lightestBlue.CGColor)
-        // using 3 steps (hex)
         let baseOrange = UIColor(hex: 0xff7f00, alpha: 1.0)
         let lightOrange = UIColor(hex: 0xff9800, alpha: 1.0)
         let lighterOrange = UIColor(hex: 0xffb100, alpha: 1.0)
@@ -56,7 +50,6 @@ public class ActivityIndicatorView {
     }
     
     public func hideActivityIndicatorView() {
-        println("AI hide: called")
         activityIndicator.stopAnimating()
         containerView.removeFromSuperview()
     }
