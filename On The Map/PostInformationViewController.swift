@@ -66,7 +66,6 @@ class PostInformationViewController: UIViewController, UITextFieldDelegate, UITe
             }
         }
         
-        
         // delegates
         textView.delegate = self
         urlTextField.delegate = self
@@ -74,7 +73,6 @@ class PostInformationViewController: UIViewController, UITextFieldDelegate, UITe
         
         // configure UI
         self.configureUI()
-
     }
     
     
@@ -123,32 +121,29 @@ class PostInformationViewController: UIViewController, UITextFieldDelegate, UITe
             thisLocation.longitude = udacityUserAnnotation.coordinate.longitude
             if udacityUser.hasPosting {
                 // UPDATE the record
-                println("\t UPDATE location pin: \(thisLocation)")
+                println("\t UPDATE location pin")
+
                 ActivityIndicatorView.shared.showActivityIndicator(view.superview!)
-                
                 ParseClient.sharedInstance().putStudentLocationPin(thisLocation) { success, message, error in
                     if success {
-                        println("\tSuccessfully Updated Location Pin!")
                         ActivityIndicatorView.shared.hideActivityIndicatorView()
                         self.dismissViewControllerAnimated(true, completion: nil)
                     } else {
-                        println("\tFailed to Update Location Pin!")
                         ActivityIndicatorView.shared.hideActivityIndicatorView()
                         self.showMessageAlert("Update Error", message: message)
                     }
                 }
             } else {
                 // ADD the record
-                println("\t ADD location pin: \(thisLocation)")
-                ActivityIndicatorView.shared.showActivityIndicator(view.superview!)
+                println("\t ADD location pin")
                 
+                ActivityIndicatorView.shared.showActivityIndicator(view.superview!)
                 ParseClient.sharedInstance().postStudentLocationPin(thisLocation) { success, message, error in
+                    
                     if success {
-                        println("\tSuccessfully Created Location Pin!")
                         ActivityIndicatorView.shared.hideActivityIndicatorView()
                         self.dismissViewControllerAnimated(true, completion: nil)
                     } else {
-                        println("\tFailed to Create Location Pin!")
                         ActivityIndicatorView.shared.hideActivityIndicatorView()
                         self.showMessageAlert("Create Error", message: message)
                     }
@@ -164,6 +159,7 @@ class PostInformationViewController: UIViewController, UITextFieldDelegate, UITe
         println("Current location didUpdate")
         println("Current latitude: \(manager.location.coordinate.latitude)")
         println("Current longitude: \(manager.location.coordinate.longitude)")
+        
         // Only need it once
         locationManager.stopUpdatingLocation()
         println("Current location updates stopped")
@@ -183,22 +179,25 @@ class PostInformationViewController: UIViewController, UITextFieldDelegate, UITe
     // ATTRIB: - http://stackoverflow.com/a/31304290
     func annotationFromLongPress(gestureRecognizer: UILongPressGestureRecognizer) {
         if gestureRecognizer.state == .Began {
-            ActivityIndicatorView.shared.showActivityIndicator(self.mapView)
             // Add annotation
             println("Post Info: Adding pin with long press, 1 touch")
             var touchPoint = gestureRecognizer.locationInView(mapView)
             var newCoordinates = mapView.convertPoint(touchPoint, toCoordinateFromView: mapView)
             println("Post Info: long press newCoordinates: \(newCoordinates)")
             udacityUserAnnotation.coordinate = newCoordinates
+            var droppedPinLocation = CLLocation(latitude: newCoordinates.latitude, longitude: newCoordinates.longitude)
             
-            CLGeocoder().reverseGeocodeLocation(CLLocation(latitude: newCoordinates.latitude, longitude: newCoordinates.longitude), completionHandler: {(placemarks, error) -> Void in
+            ActivityIndicatorView.shared.showActivityIndicator(view.superview!)
+            CLGeocoder().reverseGeocodeLocation(droppedPinLocation, completionHandler: {(placemarks, error) -> Void in
                 
                 if error != nil {
+                    ActivityIndicatorView.shared.hideActivityIndicatorView()
                     self.showMessageAlert("Reverse Geocoder Error", message: "\(error.localizedDescription)")
                     return
                 }
                 
                 if placemarks.count > 0 {
+                    ActivityIndicatorView.shared.hideActivityIndicatorView()
                     let pm = placemarks[0] as! CLPlacemark
                     
                     self.udacityUserAnnotation.title = "\(udacityUser.firstName) \(udacityUser.LastName)"
@@ -211,15 +210,19 @@ class PostInformationViewController: UIViewController, UITextFieldDelegate, UITe
                     }
                     self.mapView.addAnnotation(self.udacityUserAnnotation)
 //                    println(pm)
-                    ActivityIndicatorView.shared.hideActivityIndicatorView()
+                    
+                    // This bit parses out the more formal address lines and concatenates
+                    // into a single address string and replaces the original map search string
                     let addressDict: [NSString:NSObject] = pm.addressDictionary as! [NSString: NSObject]
                     let addrList = addressDict["FormattedAddressLines"] as! [String]
                     let address = ", ".join(addrList)
-                    print(address)
                     self.textView.text = address
                     // Note: There is also a "url" value in the placemark pm data that might be useful
                     println("Post Info: Long Press Annotation added for address: \(address)")
+                    
+                    self.centerMapOnLocation(droppedPinLocation)
                 } else {
+                    ActivityIndicatorView.shared.hideActivityIndicatorView()
                     println("Problem with the data received from the geocoder")
                 }
             })
@@ -230,14 +233,19 @@ class PostInformationViewController: UIViewController, UITextFieldDelegate, UITe
     func annotationFromLocation(lat: Double, long: Double) {
         var newCoordinates = (CLLocationCoordinate2DMake(lat, long))
         udacityUserAnnotation.coordinate = newCoordinates
-        CLGeocoder().reverseGeocodeLocation(CLLocation(latitude: newCoordinates.latitude, longitude: newCoordinates.longitude), completionHandler: {(placemarks, error) -> Void in
+        var myPinLocation = CLLocation(latitude: newCoordinates.latitude, longitude: newCoordinates.longitude)
+        
+        ActivityIndicatorView.shared.showActivityIndicator(mapView.superview!)
+        CLGeocoder().reverseGeocodeLocation(myPinLocation, completionHandler: {(placemarks, error) -> Void in
             
             if error != nil {
+                ActivityIndicatorView.shared.hideActivityIndicatorView()
                 self.showMessageAlert("Reverse Geocode Location Error", message: "\(error.localizedDescription)")
                 return
             }
             
             if placemarks.count > 0 {
+                ActivityIndicatorView.shared.hideActivityIndicatorView()
                 let pm = placemarks[0] as! CLPlacemark
                 
                 self.udacityUserAnnotation.title = "\(udacityUser.firstName) \(udacityUser.LastName)"
@@ -250,7 +258,9 @@ class PostInformationViewController: UIViewController, UITextFieldDelegate, UITe
                 }
                 self.mapView.addAnnotation(self.udacityUserAnnotation)
 //                println(pm)
+                self.centerMapOnLocation(myPinLocation)
             } else {
+                ActivityIndicatorView.shared.hideActivityIndicatorView()
                 println("Problem with the data received from the geocoder")
             }
         })
@@ -258,8 +268,10 @@ class PostInformationViewController: UIViewController, UITextFieldDelegate, UITe
     
     
     func annotationFromDescription(locationString: String) {
-        ActivityIndicatorView.shared.showActivityIndicator(self.mapView)
+        
+        ActivityIndicatorView.shared.showActivityIndicator(view.superview!)
         CLGeocoder().geocodeAddressString(locationString, completionHandler: {(placemarks: [AnyObject]!, error: NSError!) -> Void in
+            
             if error != nil {
                 ActivityIndicatorView.shared.hideActivityIndicatorView()
                 self.showMessageAlert("Address Geocode Location Error", message: "\(error.localizedDescription)")
@@ -267,6 +279,7 @@ class PostInformationViewController: UIViewController, UITextFieldDelegate, UITe
             }
             
             if let placemark = placemarks?[0] as? CLPlacemark {
+                ActivityIndicatorView.shared.hideActivityIndicatorView()
                 let pm = MKPlacemark(placemark: placemark)
                 self.udacityUserAnnotation.coordinate = (CLLocationCoordinate2DMake(placemark.location.coordinate.latitude, placemark.location.coordinate.longitude))
                 self.udacityUserAnnotation.title = "\(udacityUser.firstName) \(udacityUser.LastName)"
@@ -278,9 +291,8 @@ class PostInformationViewController: UIViewController, UITextFieldDelegate, UITe
                     self.udacityUserAnnotation.subtitle = self.urlTextField.text
                 }
                 self.mapView.addAnnotation(self.udacityUserAnnotation)
-                self.centerMapOnLocation(pm.location)
 //                println(pm)
-                ActivityIndicatorView.shared.hideActivityIndicatorView()
+                self.centerMapOnLocation(pm.location)
                 let addressDict: [NSString:NSObject] = pm.addressDictionary as! [NSString: NSObject]
                 let addrList = addressDict["FormattedAddressLines"] as! [String]
                 let address = ", ".join(addrList)
@@ -290,31 +302,32 @@ class PostInformationViewController: UIViewController, UITextFieldDelegate, UITe
                 println("pm.addressDictionary: \(pm.addressDictionary)")
                 // Note: There is also a "url" value in the placemark address data
             } else {
+                ActivityIndicatorView.shared.hideActivityIndicatorView()
                 println("Problem with the data received from the geocoder")
             }
         })
     }
     
     func removePin() {
-        dispatch_async(dispatch_get_main_queue()) {
-//            ActivityIndicatorView.shared.showActivityIndicator(self.view.superview!)
+//        dispatch_async(dispatch_get_main_queue()) {
+            ActivityIndicatorView.shared.showActivityIndicator(self.view.superview!)
             println("Post Info: Removing \(self.udacityUserAnnotation.title) pin")
             var deleteAlert = UIAlertController(title: "Delete", message: "This will remove your Udacity Student Location Pin data!\n\nAre you sure?", preferredStyle: .Alert)
             deleteAlert.addAction(UIAlertAction(title: "OK", style: .Default, handler: { action in
                 // DELETE the location pin data from the parse data store
                 ParseClient.sharedInstance().deleteStudentLocationPin() {success, message, error in
                     if success == false {
-//                        ActivityIndicatorView.shared.hideActivityIndicatorView()
+                        ActivityIndicatorView.shared.hideActivityIndicatorView()
                         self.showMessageAlert("Delete Error", message: message)
                     } else {
-//                        ActivityIndicatorView.shared.hideActivityIndicatorView()
+                        ActivityIndicatorView.shared.hideActivityIndicatorView()
                         self.dismissViewControllerAnimated(true, completion: nil)
                     }
                 }
             }))
             deleteAlert.addAction(UIAlertAction(title: "Cancel", style: .Default, handler: nil))
             self.presentViewController(deleteAlert, animated: true, completion: nil)
-        }
+//        }
     }
     
     

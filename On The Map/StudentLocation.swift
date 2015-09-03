@@ -10,6 +10,7 @@ import Foundation
 import CoreLocation
 
 // Globally accessible and link custom notification to monitor changes
+// ATTRIB: - http://stackoverflow.com/a/24756761
 // ATTRIB: - https://www.andrewcbancroft.com/2014/10/08/fundamentals-of-nsnotificationcenter-in-swift/
 // ATTRIB: - http://dev.iachieved.it/iachievedit/nsnotifications-with-userinfo-in-swift/
 // ATTRIB: - http://stackoverflow.com/q/24006234
@@ -61,4 +62,5 @@ struct StudentLocation {
         
         return studentLocations
     }
+    
 }

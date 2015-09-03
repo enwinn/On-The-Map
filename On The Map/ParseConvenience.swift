@@ -13,9 +13,9 @@ extension ParseClient {
     
     // MARK: - Get StudentLocation Collection
     func getStudentInformationCollection(completionHandler: (sucess: Bool, message: String, error: NSError?) -> Void) {
-        // grab the first 25 data records
-        println("getting first 25 student records")
-        getStudentInformation(25, skip: 0, completionHandler: completionHandler)
+        // grab the first 100 data records NOTE: These are small records, may need to review if they get larger...
+        println("getting first 100 student records")
+        getStudentInformation(100, skip: 0, completionHandler: completionHandler)
     }
     
     func getStudentInformation(limit: Int, skip: Int, completionHandler: (success: Bool, message: String, error: NSError?) -> Void) {
@@ -37,13 +37,12 @@ extension ParseClient {
                     var studentLocations = StudentLocation.studentLocationFromResults(results)
                     globalStudentLocations += studentLocations
                     if studentLocations.count == limit {
-                        // grab the next 25
-                        var newSkip = skip + 25
-                        println("Pulled in \(newSkip-25) records, checking recursively to see if there are more")
+                        // grab the next set
+                        var newSkip = skip + limit
+                        println("Pulled in \(newSkip-limit) records, checking recursively to see if there are more")
                         self.getStudentInformation(limit, skip: newSkip, completionHandler: completionHandler)
                     } else {
-//                        println("Done getting records. globalStudentLocations.count: \(globalStudentLocations.count)")
-//                        println("Done getting records. studentLocations.count: \(studentLocations.count)")
+                        println("Done getting records. globalStudentLocations.count: \(globalStudentLocations.count)")
                         completionHandler(success: true, message: "Got \(studentLocations.count) student information/location records", error: nil)
                     }
                 } else {
@@ -56,7 +55,6 @@ extension ParseClient {
     
     // MARK: - Update a student location pin
     func putStudentLocationPin(studentLocation: StudentLocation, completionHandler: (success: Bool, message: String, error: NSError?) -> Void) {
-        println("putStudentLocationPin studentLocation: \(studentLocation)")
         let objectID = udacityUser.objectID
         var method: String = Methods.StudentElement + "/" + objectID
         println("putStudentLocationPin method: \(method)")
@@ -66,7 +64,7 @@ extension ParseClient {
         let task = taskForPUTMethod(method, jsonBody: JSONBody) { JSONResult, error in
             if let error = error {
                 println("putStudentLocationPin Got an error \(error.localizedDescription)")
-                completionHandler(success: false, message: "Method Failed PUT:(StudentElement).", error: error)
+                completionHandler(success: false, message: "Method Failed PUT:(StudentElement).\nError:\(error.localizedDescription)", error: error)
             } else {
                 println("putStudentLocationPin JSONResult: \(JSONResult)")
                 if let updatedAt = JSONResult.valueForKey(ParseClient.JSONResponseKeys.UpdatedAt) as? String {
@@ -81,7 +79,14 @@ extension ParseClient {
                         longitude: studentLocation.longitude!,
                         createdAt: createdAt,
                         updatedAt: updatedAt)
+                    
+                    // Clear local student data
+                    println("Updated Pin: Clearing \(globalStudentLocations.count) local student records")
+                    globalStudentLocations.removeAll(keepCapacity: false)
+
+                    // Load fresh data from Udacity/Parse
                     self.getStudentInformationCollection(completionHandler)
+                    
                     completionHandler(success: true, message: "Successful Update", error: nil)
                 } else {
                     println("Error parsing JSONResult for updatedAt")
@@ -117,15 +122,22 @@ extension ParseClient {
                             longitude: studentLocation.longitude!,
                             createdAt: createdAt,
                             updatedAt: "")
+                        
+                        // Clear local student data
+                        println("Added Pin: Clearing \(globalStudentLocations.count) local student records")
+                        globalStudentLocations.removeAll(keepCapacity: false)
+                        
+                        // Load fresh data from Udacity/Parse
                         self.getStudentInformationCollection(completionHandler)
+                        
                         completionHandler(success: true, message: "Successful Update", error: nil)
                     } else {
                         println("Error parsing JSONResult for createdAt")
-                        completionHandler(success: false, message: "Error parsing postStudentLocationPin for createdAt", error: NSError(domain: "potStudentLocationPin parsing", code: 0, userInfo: [NSLocalizedDescriptionKey: "Could not parse postStudentLocationPin"]))
+                        completionHandler(success: false, message: "Error parsing postStudentLocationPin for createdAt", error: NSError(domain: "postStudentLocationPin parsing", code: 0, userInfo: [NSLocalizedDescriptionKey: "Could not parse postStudentLocationPin"]))
                     }
                 } else {
                     println("Error parsing JSONResult for objectID")
-                    completionHandler(success: false, message: "Error parsing postStudentLocationPin for objectID", error: NSError(domain: "potStudentLocationPin parsing", code: 0, userInfo: [NSLocalizedDescriptionKey: "Could not parse postStudentLocationPin"]))
+                    completionHandler(success: false, message: "Error parsing postStudentLocationPin for objectID", error: NSError(domain: "postStudentLocationPin parsing", code: 0, userInfo: [NSLocalizedDescriptionKey: "Could not parse postStudentLocationPin"]))
                 }
             }
         }
@@ -140,9 +152,8 @@ extension ParseClient {
         
         let task = taskForDELETEMethod(method) { JSONResult, error in
             if let error = error {
-                completionHandler(success: false, message: "Method failed DELETE(StudentElement)", error: error)
+                completionHandler(success: false, message: "Method failed DELETE(StudentElement).\nError:\(error.localizedDescription)", error: error)
             } else {
-//                println("postStudentLocationPin JSONResult: \(JSONResult)")
                 if let message = JSONResult.valueForKey(ParseClient.JSONResponseKeys.ErrorMessage) as? String {
                     completionHandler(success: false, message: message, error: nil)
                 } else {
@@ -155,6 +166,12 @@ extension ParseClient {
                         longitude: 0.0,
                         createdAt: "",
                         updatedAt: "")
+                    
+                    // Clear local student data
+                    println("Added Pin: Clearing \(globalStudentLocations.count) local student records")
+                    globalStudentLocations.removeAll(keepCapacity: false)
+                    
+                    // Load fresh data from Udacity/Parse
                     self.getStudentInformationCollection(completionHandler)
                 }
             }

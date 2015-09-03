@@ -33,15 +33,12 @@ class UdacityClient: NSObject {
         let task = session.dataTaskWithRequest(request) {data, response, downloadError in
             
             // 5/6. Parse the data and use the data (happens in completion handler)
-            println("\t\t\tMaking the GET user data request")
             if let error = downloadError {
                 println("\t\t\tGot a download error: \(error)")
                 let newError = UdacityClient.errorForData(data, response: response, error: error)
                 completionHandler(result: nil, error: downloadError)
             } else {
-                println("\t\t\tGot response data! Now try and parse the json....")
                 let newData = data.subdataWithRange(NSMakeRange(5, data.length - 5)) /* subset response data! */
-                println("\t\t\tNow try and parse the json....")
                 UdacityClient.parseJSONWithCompletionHandler(newData, completionHandler: completionHandler)
             }
         }
@@ -69,23 +66,18 @@ class UdacityClient: NSObject {
         request.HTTPBody = NSJSONSerialization.dataWithJSONObject(jsonBody, options: nil, error: &jsonifyError)
         if jsonifyError != nil {
             println("jsonifyError: \(jsonifyError)")
-        } else {
-            println("Successfully jsonified the HTTP body - jsonBody: \(jsonBody)")
         }
         
         // 4. Make the request
         let task = session.dataTaskWithRequest(request) {data, response, downloadError in
             
             // 5/6. Parse the data and use the data (happens in completion handler)
-            println("Making the POST create login session request")
             if let error = downloadError {
                 println("Got a download error: \(error)")
                 let newError = UdacityClient.errorForData(data, response: response, error: error)
                 completionHandler(result: nil, error: downloadError)
             } else {
-                println("Got response data!")
                 let newData = data.subdataWithRange(NSMakeRange(5, data.length - 5)) /* subset response data! */
-                println("Now try and parse the json....")
                 UdacityClient.parseJSONWithCompletionHandler(newData, completionHandler: completionHandler)
             }
         }
@@ -126,16 +118,13 @@ class UdacityClient: NSObject {
         let task = session.dataTaskWithRequest(request) {data, response, cookieError in
             
             // 5/6. Parse the data and use the data (happens in completion handler)
-            println("Making the DELETE login session request")
             if let error = cookieError {
                 println("Got a cookie error: \(error)")
                 let newError = UdacityClient.errorForData(data, response: response, error: error)
                 completionHandler(result: nil, error: cookieError)
             } else {
-                println("Got response data!")
                 let newData = data.subdataWithRange(NSMakeRange(5, data.length - 5)) /* subset response data! */
                 println(NSString(data: newData, encoding: NSUTF8StringEncoding)!)
-                println("Now try and parse the json....")
                 UdacityClient.parseJSONWithCompletionHandler(newData, completionHandler: completionHandler)
             }
         }
@@ -174,13 +163,11 @@ class UdacityClient: NSObject {
     /* Helper: Given raw JSON, return a usable foundation object */
     class func parseJSONWithCompletionHandler(data: NSData, completionHandler: (result: AnyObject!, error: NSError?) -> Void) {
         var parsingError: NSError? = nil
-        println("\t\t\t\tInside UdacityClient.parseJSONWithCompletionHandler...")
         let parsedResult: AnyObject? = NSJSONSerialization.JSONObjectWithData(data, options: NSJSONReadingOptions.AllowFragments, error: &parsingError)
         if let error = parsingError {
             println("\t\t\t\tGot a JSON parsing error: \(error)")
             completionHandler(result: nil, error: error)
         } else {
-//            println("SUCCESS! parsedResult: \(parsedResult!)")
             completionHandler(result: parsedResult, error: nil)
         }
     }

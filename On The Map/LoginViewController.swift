@@ -60,11 +60,9 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     @IBAction func loginToUdacity(sender: UIButton) {
         // dismiss the keyboard if present
         self.view.endEditing(true)
-        println("Pressed the login button")
         if let email = loginEmail.text,
            let password = loginPassword.text {
             ActivityIndicatorView.shared.showActivityIndicator(view)
-            println("Attempting to create a Udacity session")
             UdacityClient.sharedInstance().createUserSession(email, password: password) { success, message, error in
                 if success {
                     // complete login
@@ -77,7 +75,6 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             }
         } else {
             // show alert about field entry errors
-            println("Email and/or password is either incorrect or missing, please try again.")
             self.showMessageAlert("Login credentials error", message: "Email and/or password is either incorrect or missing, please try again.")
         }
     }

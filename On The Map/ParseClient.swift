@@ -21,7 +21,6 @@ class ParseClient: NSObject {
     func taskForGETMethod(method: String, parameters: [String: AnyObject], completionHandler: (result: AnyObject!, error: NSError?) -> Void) -> NSURLSessionDataTask {
         // 1. Set the parameters: There are none
         var mutableParameters = parameters
-//        println("ParseClient.taskForGETMethod mutableParameters: \(mutableParameters)")
         
         // 2/3. Build the URL and configure the request
         let urlString = Constants.BaseSecureURL + method + ParseClient.encodeParameters(params: mutableParameters)
@@ -40,7 +39,6 @@ class ParseClient: NSObject {
                 let newError = ParseClient.errorForData(data, response: response, error: error)
                 completionHandler(result: nil, error: downloadError)
             } else {
-                println("Got response data! Now try and parse the json....")
                 ParseClient.parseJSONWithCompletionHandler(data, completionHandler: completionHandler)
             }
         }
@@ -112,7 +110,6 @@ class ParseClient: NSObject {
                 let newError = ParseClient.errorForData(data, response: response, error: error)
                 completionHandler(result: nil, error: downloadError)
             } else {
-                println("\t\t\tParseClient.taskForPUTMethod: Got response data! Now try and parse the json....")
                 ParseClient.parseJSONWithCompletionHandler(data, completionHandler: completionHandler)
             }
         }
@@ -130,6 +127,7 @@ class ParseClient: NSObject {
         
         // 2/3. Build the URL and configure the request
         let urlString = Constants.BaseSecureURL + method
+        println("\t\t\tParseClient.taskForDELETEMethod urlString: \(urlString)")
         let url = NSURL(string: urlString)!
         let request = NSMutableURLRequest(URL: url)
         request.HTTPMethod = "DELETE"
@@ -188,23 +186,6 @@ class ParseClient: NSObject {
             completionHandler(result: parsedResult, error: nil)
         }
     }
-    
-    // Comparison with encodeParameters - REMOVE BEFORE REVIEW
-    /* Helper: Given a dictionary of parameters, convert to a string for a url */
-    class func escapedParameters(parameters: [String: AnyObject]) -> String {
-        var urlVars = [String]()
-        
-        for (key, value) in parameters {
-            /* Insure it is a string value */
-            let stringValue = "\(value)"
-            /* URLEscape it */
-            let escapedValue = stringValue.stringByAddingPercentEncodingWithAllowedCharacters(NSCharacterSet.URLQueryAllowedCharacterSet())
-            /* Append it */
-            urlVars += [key + "=" + "\(escapedValue!)"]
-        }
-        return (!urlVars.isEmpty ? "?" : "") + join("&", urlVars)
-    }
-
     
     // Helper: URLencode querystring parameters
     // ATTRIB: - http://stackoverflow.com/a/27151324

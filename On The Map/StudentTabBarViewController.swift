@@ -14,8 +14,6 @@ class StudentTabBarViewController: UITabBarController {
     @IBOutlet weak var logoutButton: UIBarButtonItem!
     
     
-    // MARK: - Variables
-    
     // MARK: - Setup
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -44,7 +42,6 @@ class StudentTabBarViewController: UITabBarController {
                     dispatch_async(dispatch_get_main_queue()) {
                         println("Udacity Logout/Delete Session Failed!")
                         // remove the activity indicator
-                        println("AI stop: logoutFromUdacity failure, show error alert.")
                         ActivityIndicatorView.shared.hideActivityIndicatorView()
                         // show alert about any returned errors
                         self.showMessageAlert("Udacity Logout Error", message: message)
@@ -56,12 +53,12 @@ class StudentTabBarViewController: UITabBarController {
         self.presentViewController(logoutAlert, animated: true, completion: nil)
     }
     
-    // Overwrite vs Edit? If going to allow editing, no point in this code below,
-    // just go to the Post Information view and either load for editing if hasPost
-    // else use the create functions
+    // Pressed the Pin button on the top bar
     func addStudentLocation() {
         let controller = self.storyboard!.instantiateViewControllerWithIdentifier("PostInformationViewController") as! PostInformationViewController
         if udacityUser.hasPosting {
+            println("*** ===================================== ***")
+            println("Tapped Post Pin to Edit:")
             println("\thasPosting: \(udacityUser.hasPosting)")
             println("\tfirstName: \(udacityUser.firstName)")
             println("\tlastName: \(udacityUser.LastName)")
@@ -72,6 +69,7 @@ class StudentTabBarViewController: UITabBarController {
             println("\tlongitude: \(udacityUser.longitude!)")
             println("\tcreatedAt: \(udacityUser.createdAt)")
             println("\tupdatedAt: \(udacityUser.updatedAt)")
+            println("*** ===================================== ***")
             var postingAlert = UIAlertController(title: "Map Location Pin", message: "A location pin already exists for\n\"\(udacityUser.firstName) \(udacityUser.LastName)\"\n\nWould you like to edit?", preferredStyle: .Alert)
             postingAlert.addAction(UIAlertAction(title: "Edit", style: .Default, handler: { action in
                 self.presentViewController(controller, animated: true, completion: nil)
@@ -84,6 +82,7 @@ class StudentTabBarViewController: UITabBarController {
         }
     }
     
+    // Pressed the refresh button on the top bar
     // ATTRIB: - QOS Class http://stackoverflow.com/a/25070476
     func refreshStudentLocations() {
         var refreshAlert = UIAlertController(title: "Refresh Student Data", message: "Check for updated or new Student Information?", preferredStyle: .Alert)
@@ -91,6 +90,12 @@ class StudentTabBarViewController: UITabBarController {
             ActivityIndicatorView.shared.showActivityIndicator(self.view.superview!)
             let qualityOfServiceClass = Int(QOS_CLASS_USER_INITIATED.value)
             dispatch_async(dispatch_get_global_queue(qualityOfServiceClass, 0)) { () -> Void in
+                
+                // Clear local student data
+                println("Refresh: Clearing \(globalStudentLocations.count) local student records")
+                globalStudentLocations.removeAll(keepCapacity: false)
+                
+                // Load fresh data from Udacity/Parse
                 ParseClient.sharedInstance().getStudentInformationCollection() { success, message, error in
                     if success == false {
                         dispatch_async(dispatch_get_main_queue()) {

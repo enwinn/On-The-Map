@@ -20,7 +20,6 @@ extension UdacityClient {
                 UdacityClient.JSONBodyKeys.Password: password
             ]
         ]
-        println("Set jsonBody value: \(jsonBody)")
         
         let task = taskForPOSTMethod(method, jsonBody: jsonBody) { JSONResult, error in
             if let error = error {
@@ -33,7 +32,6 @@ extension UdacityClient {
                         // Try and grab the necessary logged in user data to be able to post to the map later...
                         self.getUdacityUserData(userID) { success, message, error in
                             if success {
-                                println("\tGrabbed UdacityUser data!")
                                 completionHandler(success: true, message: message, error: nil)
                             } else {
                                 println("\tError grabbing UdacityUser data: \(error)")
@@ -68,7 +66,6 @@ extension UdacityClient {
             } else {
                 if let sessionDictionary = JSONResult.valueForKey(UdacityClient.JSONResponseKeys.Session) as? NSDictionary {
                     if let sessionID = sessionDictionary.valueForKey(UdacityClient.JSONResponseKeys.SessionID) as? String {
-                        println("Got Udacity userID: \(sessionID)")
                         completionHandler(success: true, message: "Deleted User Session", error: nil)
                     } else {
                         // sessionID fubar

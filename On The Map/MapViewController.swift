@@ -8,12 +8,16 @@
 
 import UIKit
 import MapKit
+import CoreLocation
 
-class MapViewController: UIViewController, MKMapViewDelegate {
+class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerDelegate {
     
     // MARK: - Data
-    var studentLocations: [StudentLocation] = [StudentLocation]()
     var annotations = [MKPointAnnotation]()
+    
+    // MARK: - Variables
+    var initialLocation: CLLocation? = nil
+    let regionRadius: CLLocationDistance = 2000
     
     // MARK: - Outlets
     @IBOutlet weak var mapView: MKMapView!
@@ -46,17 +50,20 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                 }
             }
         }
-
-        // Initial update
-        updateMapView()
-//        mapView.showsUserLocation = true
+        
     }
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(true)
         
+        // Remove any AIs
+        ActivityIndicatorView.shared.hideActivityIndicatorView()
+        
         // Subscribe to notifications
-        notificationCenter.addObserver(self, selector: "updateMapView", name: StudentLocationNotificationKey, object: nil)
+        notificationCenter.addObserver(self, selector: "updateMapView:", name: StudentLocationNotificationKey, object: nil)
+        
+        self.refreshMapView()
+        
     }
     
     override func viewWillDisappear(animated: Bool) {
@@ -68,28 +75,37 @@ class MapViewController: UIViewController, MKMapViewDelegate {
         ActivityIndicatorView.shared.hideActivityIndicatorView()
     }
     
+    func updateMapView(notification: NSNotification) {
+        self.refreshMapView();
+    }
     
-    func updateMapView() {
+    // MARK: Map Helper - center using location and region
+    func centerMapOnLocation(location: CLLocation) {
+        var coordinateRegion = MKCoordinateRegionMakeWithDistance(location.coordinate, regionRadius * 2500.0, regionRadius * 2500.0)
+        coordinateRegion = mapView.regionThatFits(coordinateRegion)
+        mapView.setRegion(coordinateRegion, animated: true)
+    }
+    
+    
+    func refreshMapView() {
         // Update the UI on the main thread
-        println("Updating the Map View...")
+        println("** Notification triggered update for the map view")
         var mediaURL = ""
         var createdAt = ""
         var updatedAt = ""
         dispatch_async(dispatch_get_main_queue()) {
+            ActivityIndicatorView.shared.showActivityIndicator(self.view.superview!)
             
             // clear existing annotations
-            println("\tMapView: Clearing any existing annotations...")
+            println("\tMapView: Clearing \(self.mapView.annotations.count) existing annotations...")
             if self.mapView.annotations.count > 0 {
                 self.mapView.removeAnnotations(self.mapView.annotations)
                 self.annotations.removeAll(keepCapacity: true)
             }
             
-            // Get student locations
-            println("\tMapView: Getting student locations...")
-            self.studentLocations = globalStudentLocations
-            println("\tMapView: globalStudentLocations.count: \(globalStudentLocations.count)")
-            println("\tMapView: Looping through student dictionary")
-            for student in self.studentLocations {
+            // Parsing student locations
+            println("\tMapView: Annotating \(globalStudentLocations.count) onto the map")
+            for student in globalStudentLocations {
                 
                 let lat = CLLocationDegrees(student.latitude!)
                 let long = CLLocationDegrees(student.longitude!)
@@ -105,6 +121,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                     mediaURL = "NO_URL_PROVIDED"
                 }
                 
+                // Update local Udacity User record if necessary
                 if udacityUser.userID == uniqueKey {
                     // Guard for unexpected multiple records case
                     if udacityUser.hasPosting == false {
@@ -122,7 +139,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                         } else {
                             updatedAt = ""
                         }
-                        /*
                         println("*** ===================================== ***")
                         println("Found logged on Udacity User pin record!")
                         println("\t\(firstName) \(lastName)")
@@ -135,7 +151,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                         println("\tcreatedAt: \(createdAt)")
                         println("\tupdatedAt: \(updatedAt)")
                         println("*** ===================================== ***")
-                        */
                         // Save to the logged on Udacity Student record
                         udacityUser.setStudentLocation(true,
                             objectID: student.objectID,
@@ -145,21 +160,6 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                             longitude: student.longitude!,
                             createdAt: createdAt,
                             updatedAt: updatedAt)
-                    /*
-                    } else {
-                        println()
-                        println("!!!! ERROR: Found more than one pin record for the logged on Udacity user!")
-                        println("\t\(firstName) \(lastName)")
-                        println("\tuserID: \(uniqueKey)")
-                        println("\tobjectID: \(student.objectID)")
-                        println("\tmapString: \(student.mapString)")
-                        println("\tmediaURL: \(mediaURL)")
-                        println("\tlat: \(lat)")
-                        println("\tlon: \(long)")
-                        println("\tcreatedAt: \(student.createdAt)")
-                        println("\tupdatedAt: \(student.updatedAt)")
-                        println()
-                    */
                     }
                 }
                 
@@ -170,13 +170,21 @@ class MapViewController: UIViewController, MKMapViewDelegate {
                 annotation.subtitle = mediaURL
                 
                 self.annotations.append(annotation)
+                ActivityIndicatorView.shared.hideActivityIndicatorView()
             }
             
             // Add the annotations to the map
             println("\tMapView: Finished looping through the student dictionary...")
             println("\tMapView: Adding the annotations to the map and showing them...")
             self.mapView.addAnnotations(self.annotations)
-//            self.mapView.showAnnotations(self.annotations, animated: true)
+            
+            if udacityUser.hasPosting {
+                // Editing an existing pin (student location record)
+                // Requires PUT method to update the existing record
+                self.initialLocation = CLLocation(latitude: CLLocationDegrees(udacityUser.latitude!), longitude: CLLocationDegrees(udacityUser.longitude!))
+                self.centerMapOnLocation(self.initialLocation!)
+            }
+
         }
     }
     
@@ -192,12 +200,7 @@ class MapViewController: UIViewController, MKMapViewDelegate {
             pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseID)
             pinView!.canShowCallout = true
             let thisTitle = annotation.title!
-            if thisTitle == "\(udacityUser.firstName) \(udacityUser.LastName)" {
-                println("thisTitle: \(thisTitle) == \(udacityUser.firstName) \(udacityUser.LastName)")
-                pinView!.pinColor = .Red
-            } else {
-                pinView!.pinColor = .Green
-            }
+            pinView!.pinColor = .Green
             pinView!.rightCalloutAccessoryView = UIButton.buttonWithType(.DetailDisclosure) as! UIButton
         } else {
             pinView!.annotation = annotation

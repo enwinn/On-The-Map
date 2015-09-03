@@ -10,9 +10,6 @@ import UIKit
 
 class StudentLocationTableViewController: UITableViewController, UITableViewDelegate, UITableViewDataSource {
     
-    // MARK: - Data
-    var studentLocations: [StudentLocation] = [StudentLocation]()
-    
     // MARK: - Outlets
     @IBOutlet var studentLocationTableView: UITableView!
     
@@ -20,29 +17,23 @@ class StudentLocationTableViewController: UITableViewController, UITableViewDele
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Initial Student Information data request
-        println("\nTableView: Initial table load of Student Information")
-        let qualityOfServiceClass = Int(QOS_CLASS_USER_INITIATED.value)
-        dispatch_async(dispatch_get_global_queue(qualityOfServiceClass, 0)) { () -> Void in
-            println("TableView: Calling getStudentInformationCollection()")
-            ParseClient.sharedInstance().getStudentInformationCollection() { success, message, error in
-                dispatch_async(dispatch_get_main_queue()) {
-                    if success == false {
-                        self.showMessageAlert("Initial Map Data Request", message: message)
-                    }
-                }
-            }
-        }
+        // Set the background gradient
+        // Useful in designing color gradients by defining 2 end colors and the number of steps between: http://www.perbang.dk/rgbgradient/
+        // using 3 steps (hex)
+        let baseOrange = UIColor(hex: 0xff7f00, alpha: 1.0)
+        let lightOrange = UIColor(hex: 0xff9800, alpha: 1.0)
+        let lighterOrange = UIColor(hex: 0xffb100, alpha: 1.0)
+        self.view.layer.configureGradientBackground(baseOrange.CGColor, lightOrange.CGColor, lighterOrange.CGColor)
+
     }
-    
     
     override func viewWillAppear(animated: Bool) {
         super.viewWillAppear(true)
         
         // Subscribe to notifications
-        notificationCenter.addObserver(self, selector: "updateTableView", name: StudentLocationNotificationKey, object: nil)
+        notificationCenter.addObserver(self, selector: "updateTableView:", name: StudentLocationNotificationKey, object: nil)
         
-        self.updateTableView()
+        self.studentLocationTableView.reloadData()
     }
     
     override func viewWillDisappear(animated: Bool) {
@@ -50,26 +41,22 @@ class StudentLocationTableViewController: UITableViewController, UITableViewDele
         
         // Unsubscribe to notifications
         notificationCenter.removeObserver(self)
+        
+        // Remove AIs
+        ActivityIndicatorView.shared.hideActivityIndicatorView()
     }
     
-    
-    func updateTableView() {
-        dispatch_async(dispatch_get_main_queue()) {
-            // Get student locations
-            self.studentLocations = globalStudentLocations
-            
-            // reload data
-            self.studentLocationTableView.reloadData()
-        }
+    func updateTableView(notification: NSNotification) {
+        self.studentLocationTableView.reloadData()
     }
     
     // MARK: - Table view delegates
     override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.studentLocations.count
+        return globalStudentLocations.count
     }
 
     override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let student = studentLocations[indexPath.row]
+        let student = globalStudentLocations[indexPath.row]
         let cell = tableView.dequeueReusableCellWithIdentifier("studentLocationCell", forIndexPath: indexPath) as! UITableViewCell
         
         cell.textLabel!.text = student.firstName + " " + student.lastName
@@ -85,7 +72,7 @@ class StudentLocationTableViewController: UITableViewController, UITableViewDele
     
     override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
         // Open the URL in Safari when the row is selected
-        let student = studentLocations[indexPath.row]
+        let student = globalStudentLocations[indexPath.row]
         // A reachable URL generally requires a valid Protocol and Resource Name.
         // Not going to extrapolate intentions - if it can't be opened or was nil to start with 
         // will alert on these two cases, otherwise pop into Safari with the "good" URL
