@@ -17,7 +17,6 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
     
     // MARK: - Variables
     var initialLocation: CLLocation? = nil
-    let regionRadius: CLLocationDistance = 2000
     
     // MARK: - Outlets
     @IBOutlet weak var mapView: MKMapView!
@@ -77,13 +76,6 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
     
     func updateMapView(notification: NSNotification) {
         self.refreshMapView();
-    }
-    
-    // MARK: Map Helper - center using location and region
-    func centerMapOnLocation(location: CLLocation) {
-        var coordinateRegion = MKCoordinateRegionMakeWithDistance(location.coordinate, regionRadius * 2500.0, regionRadius * 2500.0)
-        coordinateRegion = mapView.regionThatFits(coordinateRegion)
-        mapView.setRegion(coordinateRegion, animated: true)
     }
     
     
@@ -179,10 +171,9 @@ class MapViewController: UIViewController, MKMapViewDelegate, CLLocationManagerD
             self.mapView.addAnnotations(self.annotations)
             
             if udacityUser.hasPosting {
-                // Editing an existing pin (student location record)
-                // Requires PUT method to update the existing record
-                self.initialLocation = CLLocation(latitude: CLLocationDegrees(udacityUser.latitude!), longitude: CLLocationDegrees(udacityUser.longitude!))
-                self.centerMapOnLocation(self.initialLocation!)
+                // Center the map on the user's pin, leaving the zoom at whatever the current setting is
+                var newCenter = (CLLocationCoordinate2DMake(udacityUser.latitude!, udacityUser.longitude!))
+                self.mapView.setCenterCoordinate(newCenter, animated: true)
             }
 
         }

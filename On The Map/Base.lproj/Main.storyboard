@@ -184,11 +184,19 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="4Hg-ne-eGQ">
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="4Hg-ne-eGQ">
                                 <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                             </mapView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="4Hg-ne-eGQ" firstAttribute="bottom" secondItem="WeL-xS-9jU" secondAttribute="bottomMargin" id="AFF-hj-iwt"/>
+                            <constraint firstItem="4Hg-ne-eGQ" firstAttribute="leading" secondItem="WeL-xS-9jU" secondAttribute="leadingMargin" constant="-16" id="Bde-JF-5zH"/>
+                            <constraint firstItem="4Hg-ne-eGQ" firstAttribute="top" secondItem="WeL-xS-9jU" secondAttribute="topMargin" id="VBY-A4-l3Y"/>
+                            <constraint firstAttribute="centerX" secondItem="4Hg-ne-eGQ" secondAttribute="centerX" id="gcl-zE-DSZ"/>
+                            <constraint firstAttribute="centerY" secondItem="4Hg-ne-eGQ" secondAttribute="centerY" id="mQ9-zC-PWT"/>
+                            <constraint firstAttribute="trailingMargin" secondItem="4Hg-ne-eGQ" secondAttribute="trailing" constant="-16" id="t4B-Hc-vAJ"/>
+                        </constraints>
                     </view>
                     <tabBarItem key="tabBarItem" title="Map" image="map" id="QyR-rT-LqQ"/>
                     <connections>
@@ -277,7 +285,7 @@
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="XTK-mM-XXe" userLabel="LabelView">
                                 <rect key="frame" x="0.0" y="0.0" width="600" height="44"/>
                                 <subviews>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Enter a link &amp; a pin address to find:" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="rvz-Mx-NKp">
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Enter link &amp; a pin address to find:" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="12" adjustsLetterSpacingToFitWidth="YES" translatesAutoresizingMaskIntoConstraints="NO" id="rvz-Mx-NKp">
                                         <rect key="frame" x="65" y="11" width="470" height="21"/>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="21" id="U1s-yY-gtN"/>
